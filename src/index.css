@@ -3,3 +3,19 @@ body {
   padding: 0;
   font-family: sans-serif;
 }
+
+.mdl-layout__header-row {
+  display: flex;
+  justify-content: center;
+}
+
+.page-content {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.mdl-card {
+  margin: 10px;
+  width: 500px;
+}

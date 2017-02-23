@@ -1,5 +1,7 @@
+import hackNews from './HackNews';
+import * as _ from 'lodash';
+
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 export default class App extends Component {
@@ -15,33 +17,64 @@ export default class App extends Component {
                 <PageContent />
             </main>
         </div>
-    );
+    )
   }
 }
 
 class PageContent extends Component {
+    constructor() {
+        super();
+        this.state = {
+            titles: {
+                stories: 'Top 30 Stories',
+                comments: 'Top 10 Commenters'
+            },
+            items: []
+        };
+    }
+
+    componentDidMount() {
+        hackNews()
+            .then(
+                (response) => this.setState({items: response})
+            );
+    }
+
+    _filterStories() {
+        return _.filter(this.state.items, (item) => item.type === 'story')
+    }
+
+    _filterComments() {
+        return _.filter(this.state.items, (item) => item.type === 'comment')
+    }
+
     render() {
+        let storyTitles = _storyTitles(this._filterStories());
+        let topCommenters = _topCommenters(this._filterComments());
         return (
             <div className="page-content">
-                <Stories />
-                <Commenters />
+                <Card title={this.state.titles.stories} items={storyTitles}/>
+                <Card title={this.state.titles.comments} items={topCommenters}/>
             </div>
-        );
+        )
     }
 }
 
-class Stories extends Component {
+class Card extends Component {
+
+    _renderItems(arr) {
+        return _.map(arr, listItem)
+    }
+
     render() {
         return (
             <div className="mdl-card mdl-shadow--2dp">
                 <div className="mdl-card__title">
-                    <h2 className="mdl-card__title-text">Top Stories</h2>
+                    <h2 className="mdl-card__title-text">{this.props.title}</h2>
                 </div>
                 <div className="mdl-card__supporting-text">
                     <ul className='mdl-list'>
-                        <li className="mdl-list__item">Title 1</li>
-                        <li className="mdl-list__item">Title 2</li>
-                        <li className="mdl-list__item">Title 3</li>
+                        {this._renderItems(this.props.items)}
                     </ul>
                 </div>
             </div>
@@ -49,23 +82,25 @@ class Stories extends Component {
     }
 }
 
+//==============================================================================
+// Helper funtions
 
-class Commenters extends Component {
-    render() {
-        return (
-            <div className="mdl-card mdl-shadow--2dp">
-                <div className="mdl-card__title">
-                    <h2 className="mdl-card__title-text">Top Commenters</h2>
-                </div>
-                <div className="mdl-card__supporting-text">
-                    <ul className='mdl-list'>
-                        <li className="mdl-list__item">Commenter 1: 12</li>
-                        <li className="mdl-list__item">Commenter 2: 7</li>
-                        <li className="mdl-list__item">Commenter 3: 5</li>
-                    </ul>
-                </div>
-            </div>
-        );
-    }
-}
+const listItem = (item) =>
+    <li className="mdl-list__item">{JSON.stringify(item)}</li>;
 
+let _storyTitles = (arr) =>  {
+    return _.map(arr, (story) => story.title)
+};
+
+let tupleToObject = (tuple) =>  {
+    let obj ={};
+    obj[tuple[0]] = tuple[1];
+    return obj;
+};
+
+let _topCommenters = (comments) => {
+    let entries = _.entries(_.countBy(comments, 'by'));
+    let sorted = _.reverse(_.sortBy(entries, (comment) => comment[1]));
+    let obj = _.map(sorted,(comment) => tupleToObject(comment));
+    return _.slice(obj, 0, 10)
+};
